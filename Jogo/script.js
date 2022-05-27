@@ -2,6 +2,10 @@ let aWebSocket = new WebSocket("ws://127.0.0.1:3012");
 let canvas = document.getElementById("Canvas");
 let contcanvas = canvas.getContext("2d");
 let pontuacao = document.getElementById("Pontuacao");
+let loginDiv = document.getElementById("login");
+let gameDiv = document.getElementById("game");
+
+gameDiv.style.display = "none"
 
 let posi = {x:0, y:0};
 let largura = 1000;

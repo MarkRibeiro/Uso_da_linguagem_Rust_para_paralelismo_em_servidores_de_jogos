@@ -3,12 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script>
+        function startGame() {
+            console.log("OIIIIIIIIIII")
+            let loginDiv = document.getElementById("login");
+            let gameDiv = document.getElementById("game");
+            
+            loginDiv.style.display = "none"
+            gameDiv.style.display = "block"
+        }
+    </script>
 </head>
 <body>
-    <canvas id="Canvas" width="1000" height="500" style="border:1px solid #000;"></canvas>
-    <br>
-    <h1 id="Pontuacao">Pontuação: 0</h1>
-    <script type="module" src = "script.js">
-    </script>
+    <div id="login">
+        <h1>Escolha um nome e uma cor</h1>
+        <label for="fname">Nome:</label>
+        <input type="text" id="nome" name="nome"><br><br>
+
+        <label for="cor">Cor:</label>
+        <input type="color" id="cor" name="cor" value="#e66465"><br><br>
+
+        <input type="button" value="Jogar" onclick="return startGame();">
+    </div>
+
+    <div id="game">
+        <canvas id="Canvas" width="1000" height="500" style="border:1px solid #000;"></canvas>
+        <br>
+        <h1 id="Pontuacao">Pontuação: 0</h1>
+        <script type="module" src = "script.js">
+        </script>
+    </div>
 </body>
 </html>
