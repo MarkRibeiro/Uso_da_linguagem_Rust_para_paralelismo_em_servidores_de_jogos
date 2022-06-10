@@ -17,10 +17,11 @@ let piscar = 0;
 let piscadaTempo = 10;
 let estado;
 let id;
+let jogadores;
 
 aWebSocket.onopen = function(event) {
     console.log("WebSocket is open now.");
-    aWebSocket.send("conecta;" + cor + ";" + posi.x + ";" + posi.y);
+    aWebSocket.send("conecta;" + id + ";" + cor + ";" + posi.x + ";" + posi.y);
     contcanvas.beginPath();
     contcanvas.fillStyle = cor;
     contcanvas.rect(posi.x*tamCelula, posi.y*tamCelula, tamCelula, tamCelula);
@@ -38,8 +39,7 @@ aWebSocket.onmessage = function(event) {
     //let id = sessionStorage.getItem("id")
     console.log(estado);
     console.log(id);
-    posi.x = estado.jogadores[id].x
-    posi.y = estado.jogadores[id].y
+    jogadores = estado.jogadores
 
     pontuacao.innerHTML = "Pontuação: " +  estado.jogadores[id].pontuacao;
 
@@ -70,29 +70,36 @@ function atualizaCanvas() {
         }
         x+=1
     }
-    contcanvas.fillStyle = "green";
-    contcanvas.strokeStyle = "black";
-    contcanvas.beginPath();
-    contcanvas.rect(posi.x*tamCelula, posi.y*tamCelula, tamCelula, tamCelula);
-    contcanvas.fill();
-    contcanvas.stroke();
-
-    let z = tamCelula/4;
-    let j = tamCelula/5;
-    contcanvas.fillStyle = "black";
-
-    if (piscar){
-        contcanvas.beginPath();
-        contcanvas.rect(posi.x*tamCelula+tamCelula/2-z/2 - j, posi.y*tamCelula+tamCelula/4 + 3*z/4, z, z/4);
-        contcanvas.rect(posi.x*tamCelula+tamCelula/2-z/2 + j, posi.y*tamCelula+tamCelula/4+ 3*z/4, z, z/4);
-        contcanvas.fill();
-        piscar -= 1;
+    if (jogadores == undefined){
+        window.requestAnimationFrame(atualizaCanvas);
+        return
     }
-    else {
+
+    for (let jogador of jogadores){
+        contcanvas.fillStyle = "green";
+        contcanvas.strokeStyle = "black";
         contcanvas.beginPath();
-        contcanvas.rect(posi.x*tamCelula+tamCelula/2-z/2 - j, posi.y*tamCelula+tamCelula/4, z, z);
-        contcanvas.rect(posi.x*tamCelula+tamCelula/2-z/2 + j, posi.y*tamCelula+tamCelula/4, z, z);
+        contcanvas.rect(jogador.x*tamCelula, jogador.y*tamCelula, tamCelula, tamCelula);
         contcanvas.fill();
+        contcanvas.stroke();
+
+        let z = tamCelula/4;
+        let j = tamCelula/5;
+        contcanvas.fillStyle = "black";
+
+        if (piscar){
+            contcanvas.beginPath();
+            contcanvas.rect(jogador.x*tamCelula+tamCelula/2-z/2 - j, jogador.y*tamCelula+tamCelula/4 + 3*z/4, z, z/4);
+            contcanvas.rect(jogador.x*tamCelula+tamCelula/2-z/2 + j, jogador.y*tamCelula+tamCelula/4+ 3*z/4, z, z/4);
+            contcanvas.fill();
+            piscar -= 1;
+        }
+        else {
+            contcanvas.beginPath();
+            contcanvas.rect(jogador.x*tamCelula+tamCelula/2-z/2 - j, jogador.y*tamCelula+tamCelula/4, z, z);
+            contcanvas.rect(jogador.x*tamCelula+tamCelula/2-z/2 + j, jogador.y*tamCelula+tamCelula/4, z, z);
+            contcanvas.fill();
+        }
     }
         //console.log(event.data);
     window.requestAnimationFrame(atualizaCanvas);
@@ -100,27 +107,30 @@ function atualizaCanvas() {
 
 
 function leTeclado(evento) {
-    if(event.key == "ArrowUp" && posi.y-1>= 0){
-        aWebSocket.send("atualiza;cima");
-    }
+    for(let jogador of jogadores){
+        console.log(jogador.id, id);
+        if(jogador.id == id){
+            if(event.key == "ArrowUp" && jogador.y-1>= 0){
+                aWebSocket.send("atualiza;" + id +";cima");
+            }
 
-    if(event.key == "ArrowDown" && posi.y+1+tamJogador <= altura/tamCelula){
-        aWebSocket.send("atualiza;baixo");
-    }
+            if(event.key == "ArrowDown" && jogador.y+1+tamJogador <= altura/tamCelula){
+                aWebSocket.send("atualiza;" + id +";baixo");
+            }
 
-    if(event.key == "ArrowLeft" && posi.x-1 >= 0){
-        aWebSocket.send("atualiza;esquerda");
-    }
+            if(event.key == "ArrowLeft" && jogador.x-1 >= 0){
+                aWebSocket.send("atualiza;" + id +";esquerda");
+            }
 
-    if(event.key == "ArrowRight" && posi.x+1+tamJogador <= largura/tamCelula){
-        aWebSocket.send("atualiza;direita");
+            if(event.key == "ArrowRight" && jogador.x+1+tamJogador <= largura/tamCelula){
+                aWebSocket.send("atualiza;" + id +";direita");
+            }
+            if(event.key == " " ){
+                aWebSocket.send("pinta;" + id +";" + jogador.x + ";" + jogador.y);
+                piscar = piscadaTempo;
+            }
+            aWebSocket.send("atualiza;" + id + ";" + cor + ";" + jogador.x + ";" + jogador.y);
+        }
     }
-
-    if(event.key == " " ){
-        aWebSocket.send("pinta;" + posi.x + ";" + posi.y);
-        piscar = piscadaTempo;
-    }
-
-    aWebSocket.send("atualiza;" + cor + ";" + posi.x + ";" + posi.y);
 }
 document.addEventListener("keydown", leTeclado);

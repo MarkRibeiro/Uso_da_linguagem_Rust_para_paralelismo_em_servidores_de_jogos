@@ -7,6 +7,11 @@
     <list default="true" id="73133dc7-66e3-4daf-8231-35daf4875f6a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/../Jogo/jogo.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Jogo/jogo.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Jogo/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Jogo/script.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pf2/.idea/runConfigurations.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pf2/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../pf2/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pf2/src/bin/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/../pf2/src/bin/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,6 +23,9 @@
   </component>
   <component name="MacroExpansionManager">
     <option name="directoryName" value="ometuks8" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectId" id="29jcII6xSqHtOx0AS72V3VeN11u" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -48,24 +56,10 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration default="true" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-      <option name="command" value="run" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
   </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+    <option name="version" value="2" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -77,5 +71,16 @@
       <updated>1653629854212</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

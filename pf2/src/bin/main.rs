@@ -17,6 +17,7 @@ struct Point {
 
 struct Player{
   //name: String,
+  id : usize,
   color: String,
   posi: Point,
   score: u32
@@ -35,7 +36,6 @@ fn main() {
   state.map = create_map();
   let current_state = Arc::new(Mutex::new(state));
 
-  //inicio do codigo copiado
   for stream in listener.incoming() {
     let mut websocket = accept(stream.unwrap()).unwrap();
     let websocket =  Arc::new(Mutex::new(websocket));
@@ -45,7 +45,6 @@ fn main() {
       handle_connection(websocket, current_state.clone());
     });
   }
-  //fim do codigo compiado
 
   println!("Shutting down.");
 }
@@ -117,7 +116,8 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
   if info[0]=="conecta" {
     println!("Novo Jogador");
     let jogador = Player{
-      color: info[1].to_string(),
+      id: state.players.len(),
+      color: info[2].to_string(),
       posi: Point { x: 0, y: 0 },
       score: 0
     };
@@ -125,22 +125,23 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
     println!("numero de jogadores: {:?}", state.players.len());
   }
   if info[0]=="atualiza" {
-    if info[1] == "cima" {
-      state.players[0].posi.y -= 1;
+    let id = info[1].parse::<usize>().unwrap();
+    if info[2] == "cima" {
+      state.players[id].posi.y -= 1;
     }
-    if info[1] == "baixo" {
-      state.players[0].posi.y += 1;
+    if info[2] == "baixo" {
+      state.players[id].posi.y += 1;
     }
-    if info[1] == "esquerda" {
-      state.players[0].posi.x -= 1;
+    if info[2] == "esquerda" {
+      state.players[id].posi.x -= 1;
     }
-    if info[1] == "direita" {
-      state.players[0].posi.x += 1;
+    if info[2] == "direita" {
+      state.players[id].posi.x += 1;
     }
   }
   else if info[0]=="pinta" {
-    let novo_x = info[1].parse::<usize>();
-    let novo_y = info[2].parse::<usize>();
+    let novo_x = info[2].parse::<usize>();
+    let novo_y = info[3].parse::<usize>();
     if let Ok(x) = novo_x{
       if let Ok(y) = novo_y {
         state.map[x][y] = "green".to_string();
@@ -164,8 +165,8 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
   let mut ret = String::from("{\"jogadores\" : [");
   let mut count = 0;
   for jogador in &state.players {
-    let aaa = format!("{{\"cor\":\"{}\" , \"x\":{} , \"y\":{} , \"pontuação\":{}}}",
-                      jogador.color, jogador.posi.x, jogador.posi.y, jogador.score);
+    let aaa = format!("{{\"id\":\"{}\" ,\"cor\":\"{}\" , \"x\":{} , \"y\":{} , \"pontuação\":{}}}",
+                      jogador.id, jogador.color, jogador.posi.x, jogador.posi.y, jogador.score);
     ret = ret + &aaa;
 
     if count < state.players.len() - 1 {
@@ -181,6 +182,7 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
   }
 
   ret = ret + "}";
-  let _ = (*websocket).write_message(Message::Text(ret));
+  let _ = (*websocket).write_message(Message::Text(ret.clone()));
+  println!("{:?}", ret);
 
 }
