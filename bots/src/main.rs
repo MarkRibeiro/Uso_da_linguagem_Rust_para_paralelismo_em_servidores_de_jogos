@@ -11,7 +11,9 @@ fn main() {
     std::io::stdin().read_line(&mut port_number).unwrap();
     let port_number = port_number.trim().parse::<i32>().unwrap();
 
-    next_moviment();
+    while true {
+        next_moviment();
+    }
 }
 
 fn next_moviment() -> i32 {
