@@ -5,7 +5,7 @@ let pontuacao = document.getElementById("Pontuacao");
 let loginDiv = document.getElementById("login");
 let gameDiv = document.getElementById("game");
 
-gameDiv.style.display = "none"
+loginDiv.style.display = "none"
 
 let posi = {x:0, y:0};
 let largura = 1000;
@@ -75,7 +75,7 @@ function atualizaCanvas() {
         return
     }
 
-    for (let jogador of jogadores){
+    for (let jogador of jogadores) {
         contcanvas.fillStyle = "green";
         contcanvas.strokeStyle = "black";
         contcanvas.beginPath();
@@ -87,7 +87,7 @@ function atualizaCanvas() {
         let j = tamCelula/5;
         contcanvas.fillStyle = "black";
 
-        if (piscar){
+        if (jogador.blinking) {
             contcanvas.beginPath();
             contcanvas.rect(jogador.x*tamCelula+tamCelula/2-z/2 - j, jogador.y*tamCelula+tamCelula/4 + 3*z/4, z, z/4);
             contcanvas.rect(jogador.x*tamCelula+tamCelula/2-z/2 + j, jogador.y*tamCelula+tamCelula/4+ 3*z/4, z, z/4);
@@ -106,10 +106,10 @@ function atualizaCanvas() {
 }
 
 
-function leTeclado(evento) {
-    for(let jogador of jogadores){
+function teclaPressionada(evento) {
+    for(let jogador of jogadores) {
         console.log(jogador.id, id);
-        if(jogador.id == id){
+        if(jogador.id == id) {
             if(event.key == "ArrowUp" && jogador.y-1>= 0){
                 aWebSocket.send("atualiza;" + id +";cima");
             }
@@ -133,4 +133,4 @@ function leTeclado(evento) {
         }
     }
 }
-document.addEventListener("keydown", leTeclado);
+document.addEventListener("keydown", teclaPressionada);
