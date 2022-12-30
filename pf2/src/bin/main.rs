@@ -1,6 +1,7 @@
 extern crate tungstenite;
 use pf2::ThreadPool;
 use std::io;
+use rand::Rng;
 //use std::net::TcpListener;
 use std::net::TcpStream;
 use std::thread;
@@ -26,7 +27,8 @@ struct State {
   players: Vec<Player>,
   map: Vec<Vec<String>>
 }
-
+static heigth:usize = 10;
+static width:usize = 20;
 fn main() {
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
   let pool = ThreadPool::new(40);
@@ -81,12 +83,13 @@ fn main() {
 }
 
 fn create_map() -> Vec<Vec<String>> {
+
   let mut matrix = vec![];
   let mut vector = vec![];
-  for _ in 0..10 {
+  for _ in 0..heigth {
     vector.push("white".to_string());
   }
-  for _ in 0..20 {
+  for _ in 0..width {
     matrix.push(vector.clone());
   }
   return matrix;
@@ -170,7 +173,7 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
     let jogador = Player{
       id: newID,
       color: info[2].to_string(),
-      posi: Point { x: 5, y: 5 },
+      posi: Point { x: rand::thread_rng().gen_range(0..width), y: rand::thread_rng().gen_range(0..heigth) },
       score: 0
     };
     state.players.push(jogador);
@@ -182,13 +185,13 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
     if info[2] == "cima" && state.players[id].posi.y >= 1 {
       state.players[id].posi.y -= 1;
     }
-    if info[2] == "baixo" && state.players[id].posi.y + 1 < 10 {
+    if info[2] == "baixo" && state.players[id].posi.y + 1 < heigth {
       state.players[id].posi.y += 1;
     }
     if info[2] == "esquerda" && state.players[id].posi.x >= 1 {
       state.players[id].posi.x -= 1;
     }
-    if info[2] == "direita" && state.players[id].posi.x + 1 < 20 {
+    if info[2] == "direita" && state.players[id].posi.x + 1 < width {
       state.players[id].posi.x += 1;
     }
   }
