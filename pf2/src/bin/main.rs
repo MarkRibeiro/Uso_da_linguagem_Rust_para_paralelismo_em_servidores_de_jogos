@@ -1,18 +1,17 @@
 extern crate tungstenite;
 use pf2::ThreadPool;
-use std::{fs, io};
-use std::io::prelude::*;
+use std::io;
 //use std::net::TcpListener;
 use std::net::TcpStream;
 use std::thread;
 use std::time::Duration;
-use std::{net::TcpListener, thread::spawn};
+use std::{net::TcpListener};
 use std::sync::{Arc, Mutex, MutexGuard};
-use tungstenite::{accept, Error, handshake::server::{Request, Response}, Message, WebSocket};
+use tungstenite::{accept, Error, Message, WebSocket};
 
 struct Point {
-  x:u32,
-  y:u32
+  x:usize,
+  y:usize
 }
 
 struct Player{
@@ -30,22 +29,22 @@ struct State {
 
 fn main() {
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
-  let pool = ThreadPool::new(4);
+  let pool = ThreadPool::new(40);
 
   let mut state = State{ players: vec![], map: vec![] };
   state.map = create_map();
   let current_state = Arc::new(Mutex::new(state));
   let current_state_clone = current_state.clone();
-  let mut sockets:Vec<Arc<Mutex<WebSocket<TcpStream>>>> = Vec::new();
-  let mut sockets:Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>> = Arc::new(Mutex::new(sockets));
-  let mut sockets_clone = sockets.clone();
+  let sockets:Vec<Arc<Mutex<WebSocket<TcpStream>>>> = Vec::new();
+  let sockets:Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>> = Arc::new(Mutex::new(sockets));
+  let sockets_clone = sockets.clone();
   pool.execute(move || {
     loop {
       //println!("oi");
       let response;
-      thread::sleep(Duration::from_millis(9000000));
+      thread::sleep(Duration::from_millis(100));
       {
-        let mut state = current_state.clone();
+        let state = current_state.clone();
         response = build_response(false, &mut state.lock().unwrap());
       }
       let sockets = sockets_clone.clone();
@@ -59,11 +58,17 @@ fn main() {
   for stream in listener.incoming() {
     let stream = stream.unwrap();
     stream.set_nonblocking(true).unwrap();
-    let mut websocket = accept(stream).unwrap();
+    let websocket = match accept(stream) {
+      Ok(x) => x,
+      Err(e) => {
+        println!("Ignoring because {}", e);
+        continue
+      }
+    };
     let websocket =  Arc::new(Mutex::new(websocket));
     let current_state = current_state_clone.clone();
     {
-      let mut sockets = sockets.clone();
+      let sockets = sockets.clone();
       let mut sockets = sockets.lock().unwrap();
       sockets.push(websocket.clone());
     }
@@ -134,7 +139,18 @@ fn handle_connection(websocket: Arc<Mutex<WebSocket<TcpStream>>>, current_state:
       Err(Error::Io(ref e)) if e.kind() == io::ErrorKind::WouldBlock => {
         //println!("WouldBlock");
         continue;
-      }
+      },
+      Err(Error::Io(ref e)) if e.kind() == io::ErrorKind::ConnectionReset => {
+        println!("Connection reset");
+      },
+      Err(Error::AlreadyClosed) => {
+        println!("Conexão encerrada");
+        break;
+      },
+      Err(Error::ConnectionClosed) => {
+        println!("Conexão encerrada");
+        break;
+      },
       Err(e) => panic!("encountered IO error: {e}")
     }
   }
@@ -150,38 +166,49 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
   let mut state = current_state.lock().unwrap();
   if info[0]=="conecta" {
     println!("Novo Jogador");
+    let newID = state.players.len();
     let jogador = Player{
-      id: state.players.len(),
+      id: newID,
       color: info[2].to_string(),
       posi: Point { x: 5, y: 5 },
       score: 0
     };
     state.players.push(jogador);
-    println!("numero de jogadores: {:?}", state.players.len());
+    println!("numero de jogadores: {:?}", newID);
+    (*websocket).write_message(Message::Text(format!("{}", newID))).unwrap();
   }
   if info[0]=="atualiza" {
     let id = info[1].parse::<usize>().unwrap();
-    if info[2] == "cima" {
+    if info[2] == "cima" && state.players[id].posi.y >= 1 {
       state.players[id].posi.y -= 1;
     }
-    if info[2] == "baixo" {
+    if info[2] == "baixo" && state.players[id].posi.y + 1 < 10 {
       state.players[id].posi.y += 1;
     }
-    if info[2] == "esquerda" {
+    if info[2] == "esquerda" && state.players[id].posi.x >= 1 {
       state.players[id].posi.x -= 1;
     }
-    if info[2] == "direita" {
+    if info[2] == "direita" && state.players[id].posi.x + 1 < 20 {
       state.players[id].posi.x += 1;
     }
   }
   else if info[0]=="pinta" {
-    let novo_x = info[2].parse::<usize>();
-    let novo_y = info[3].parse::<usize>();
-    if let Ok(x) = novo_x{
-      if let Ok(y) = novo_y {
-        state.map[x][y] = "green".to_string();
+    let id = info[1].parse::<usize>().unwrap();
+    if info.len() > 2 {
+      let novo_x = info[2].parse::<usize>();
+      let novo_y = info[3].parse::<usize>();
+      if let Ok(x) = novo_x {
+        if let Ok(y) = novo_y {
+          state.map[x][y] = state.players[id].color.to_string();
+        }
       }
+    } else {
+      let x = state.players[id].posi.x;
+      let y = state.players[id].posi.y;
+
+      state.map[x][y] = state.players[id].color.to_string();
     }
+
   }
   for mut jogador in &mut state.players{
     jogador.score = 0;
@@ -208,7 +235,7 @@ fn build_response(is_connected: bool, state: &mut MutexGuard<State>) -> String {
   let mut ret = String::from("{\"jogadores\" : [");
   let mut count = 0;
   for jogador in &state.players {
-    let aaa = format!("{{\"id\":\"{}\" ,\"cor\":\"{}\" , \"x\":{} , \"y\":{} , \"pontuação\":{}}}",
+    let aaa = format!("{{\"id\":\"{}\" ,\"cor\":\"{}\" , \"x\":{} , \"y\":{} , \"pontuacao\":{}}}",
                       jogador.id, jogador.color, jogador.posi.x, jogador.posi.y, jogador.score);
     ret = ret + &aaa;
 

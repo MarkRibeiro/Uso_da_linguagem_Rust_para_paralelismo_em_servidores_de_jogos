@@ -1,4 +1,4 @@
-let aWebSocket = new WebSocket("ws://127.0.0.1:3012");
+let aWebSocket;
 let canvas = document.getElementById("Canvas");
 let contcanvas = canvas.getContext("2d");
 let pontuacao = document.getElementById("Pontuacao");
@@ -19,31 +19,52 @@ let estado;
 let id;
 let jogadores;
 
-aWebSocket.onopen = function(event) {
-    console.log("WebSocket is open now.");
-    aWebSocket.send("conecta;" + id + ";" + cor + ";" + posi.x + ";" + posi.y);
-    contcanvas.beginPath();
-    contcanvas.fillStyle = cor;
-    contcanvas.rect(posi.x*tamCelula, posi.y*tamCelula, tamCelula, tamCelula);
-    contcanvas.fill();
-};
-
-window.requestAnimationFrame(atualizaCanvas);
-
-aWebSocket.onmessage = function(event) {
-    estado = JSON.parse(event.data);
-    if (estado.id !== undefined) {
-        id = estado.id
-        sessionStorage.setItem("id", estado.id)
+function tryToConnect(attempt) {
+    if (attempt <= 0) {
+        console.log("Desisti de conectar");
+        return;
     }
-    //let id = sessionStorage.getItem("id")
-    console.log(estado);
-    console.log(id);
-    jogadores = estado.jogadores
+    aWebSocket = new WebSocket("ws://127.0.0.1:3012");
+    aWebSocket.onopen = function (event) {
+        console.log("WebSocket is open now.");
+        aWebSocket.send("conecta;" + id + ";" + cor + ";" + posi.x + ";" + posi.y);
+        contcanvas.beginPath();
+        contcanvas.fillStyle = cor;
+        contcanvas.rect(posi.x * tamCelula, posi.y * tamCelula, tamCelula, tamCelula);
+        contcanvas.fill();
+    };
 
-    pontuacao.innerHTML = "Pontuação: " +  estado.jogadores[id].pontuacao;
+    window.requestAnimationFrame(atualizaCanvas);
 
-};
+    aWebSocket.onmessage = function (event) {
+        estado = JSON.parse(event.data);
+        if (estado.id !== undefined) {
+            id = estado.id
+            sessionStorage.setItem("id", estado.id)
+        }
+        //let id = sessionStorage.getItem("id")
+        console.log(estado);
+        console.log(id);
+        jogadores = estado.jogadores
+
+        pontuacao.innerHTML = "Pontuação: " + estado.jogadores[id].pontuacao;
+
+    };
+    aWebSocket.onerror = function (event) {
+        console.log(event);
+    }
+
+    aWebSocket.onclose = function (event) {
+        console.log(event);
+        if (event.wasClean === false) {
+            setTimeout(function () {
+                tryToConnect(attempt - 1);
+            }, 100);
+        }
+    }
+}
+
+tryToConnect(100);
 
 function atualizaCanvas() {
     if (!estado) {
@@ -76,7 +97,7 @@ function atualizaCanvas() {
     }
 
     for (let jogador of jogadores){
-        contcanvas.fillStyle = "green";
+        contcanvas.fillStyle = jogador.cor;
         contcanvas.strokeStyle = "black";
         contcanvas.beginPath();
         contcanvas.rect(jogador.x*tamCelula, jogador.y*tamCelula, tamCelula, tamCelula);
@@ -107,6 +128,9 @@ function atualizaCanvas() {
 
 
 function leTeclado(evento) {
+    if (jogadores === undefined) {
+        return;
+    }
     for(let jogador of jogadores){
         console.log(jogador.id, id);
         if(jogador.id == id){
@@ -129,7 +153,7 @@ function leTeclado(evento) {
                 aWebSocket.send("pinta;" + id +";" + jogador.x + ";" + jogador.y);
                 piscar = piscadaTempo;
             }
-            aWebSocket.send("atualiza;" + id + ";" + cor + ";" + jogador.x + ";" + jogador.y);
+            aWebSocket.send("atualiza;" + id + ";" + jogador.color + ";" + jogador.x + ";" + jogador.y);
         }
     }
 }
