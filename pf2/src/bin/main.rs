@@ -77,6 +77,7 @@ fn main() {
     pool.execute(move || {
       handle_connection(websocket, current_state.clone());
     });
+
   }
 
   println!("Shutting down.");
@@ -230,6 +231,7 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
   let ret = build_response(info[0] == "conecta", &mut state);
 
   let _ = (*websocket).write_message(Message::Text(ret.clone()));
+
   println!("{:?}", ret);
 
 }
@@ -256,3 +258,9 @@ fn build_response(is_connected: bool, state: &mut MutexGuard<State>) -> String {
   ret = ret + "}";
   ret
 }
+/*
+fn send_remaining_time(){
+  for websocket in sockets {
+    (websocket).write_message(Message::Text(remainingTime));
+  }
+}*/

@@ -2,6 +2,7 @@ let aWebSocket;
 let canvas = document.getElementById("Canvas");
 let contcanvas = canvas.getContext("2d");
 let pontuacao = document.getElementById("Pontuacao");
+let tempoRestante = document.getElementById("TempoRestante")
 let loginDiv = document.getElementById("login");
 let gameDiv = document.getElementById("game");
 
@@ -18,6 +19,9 @@ let piscadaTempo = 10;
 let estado;
 let id;
 let jogadores;
+let tempoDaPartida = 5;
+
+let intervalId = window.setInterval(atualizaContagem, 1000);
 
 function tryToConnect(attempt) {
     if (attempt <= 0) {
@@ -48,7 +52,6 @@ function tryToConnect(attempt) {
         jogadores = estado.jogadores
 
         pontuacao.innerHTML = "Pontuação: " + estado.jogadores[id].pontuacao;
-
     };
     aWebSocket.onerror = function (event) {
         console.log(event);
@@ -157,4 +160,16 @@ function leTeclado(evento) {
         }
     }
 }
+
+function atualizaContagem(){
+    tempoDaPartida--;
+    tempoRestante.innerHTML = "Tempo Restante: " + tempoDaPartida
+
+    if (tempoDaPartida <= -1) {
+        alert("Fim do jogo\nO vencedor foi ....");
+        clearInterval(intervalId);
+        tempoRestante.innerHTML = "Tempo Restante: 0"
+    }
+}
+
 document.addEventListener("keydown", leTeclado);

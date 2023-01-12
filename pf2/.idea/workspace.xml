@@ -8,9 +8,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4c973eb7-b087-49d6-8e5d-e18c7510f0b5" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../bots/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../bots/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../bots/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/../bots/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Jogo/jogo.html" beforeDir="false" afterPath="$PROJECT_DIR$/../Jogo/jogo.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Jogo/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/../Jogo/script.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bin/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/bin/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
