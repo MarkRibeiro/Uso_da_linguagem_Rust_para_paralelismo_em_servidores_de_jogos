@@ -9,10 +9,8 @@
   <component name="ChangeListManager">
     <list default="true" id="73133dc7-66e3-4daf-8231-35daf4875f6a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../pf2/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../pf2/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../pf2/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/../pf2/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/src/bin/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/../pf2/src/bin/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

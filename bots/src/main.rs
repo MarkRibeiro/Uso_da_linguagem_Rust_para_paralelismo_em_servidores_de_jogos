@@ -1,31 +1,26 @@
 use std::net::TcpStream;
 use rand::Rng;
-use std::io::{self, BufRead, BufReader, Write};
 use std::thread;
-use std::thread::Thread;
 use std::time::Duration;
 use tungstenite::{connect, Message, WebSocket};
 use tungstenite::stream::MaybeTlsStream;
 use bots::ThreadPool;
+use std::env;
 
 fn main() {
-    let mut id = 0;
-    let mut number_of_bots = String::new();
-    let mut port_number = String::new();
-    println!("Quantos jogadores voce quer simular? ");
-    std::io::stdin().read_line(&mut number_of_bots).unwrap();
-    let number_of_bots = number_of_bots.trim().parse::<i32>().unwrap();
+    let args: Vec<String> = env::args().collect();
+    let arg_1 = &args[1];
+    let arg_2 = &args[2];
+
+    let number_of_bots = arg_1.trim().parse::<i32>().unwrap();
+    let port_number = arg_2;
 
     let pool = ThreadPool::new(number_of_bots as usize);
-    println!("Qual a porta desejada? ");
-    std::io::stdin().read_line(&mut port_number).unwrap();
 
-    //format!("ws://127.0.0.1:{}", port_number)
-    for i in 0..number_of_bots {
+    for _ in 0..number_of_bots {
         let (mut socket, response) = loop {
-            //match connect("ws://127.0.0.1:3012") {
             match connect(format!("ws://127.0.0.1:{}", port_number.trim())) {
-                Ok((mut socket, response)) => {
+                Ok((socket, response)) => {
                     break (socket, response);
                 },
                 Err(_) => {
@@ -33,54 +28,49 @@ fn main() {
                 }
             }
         };
+
         pool.execute(move || {
             //random hexadecimal
             socket.write_message(Message::Text(format!("conecta;{};{};0;0", -1, random_hex()))).unwrap();
             let msg = socket.read_message().unwrap();
             // let info:Vec<&str> = msg.to_string().split(";").collect();
-            let botID = msg.to_string().trim().parse::<i32>().unwrap();
-            println!("Bot id: {}", botID);
+            let bot_id = msg.to_string().trim().parse::<i32>().unwrap();
+            println!("Bot {} trabalhando", bot_id);
             loop {
-                next_movement(&mut socket, botID);
+                next_movement(&mut socket, bot_id);
                 thread::sleep(Duration::from_millis(100));
             }
         });
-        // id += 1;
     }
     thread::sleep(Duration::from_secs(10));
 }
 
-fn next_movement(socket: &mut WebSocket<MaybeTlsStream<TcpStream>>, id: i32) {
-    let mut x = rand::thread_rng().gen_range(0..5);
+fn next_movement(socket: &mut WebSocket<MaybeTlsStream<TcpStream>>, bot_id: i32) {
+    let x = rand::thread_rng().gen_range(0..5);
     let mut direction = "";
     match x {
-        0 => { //cima
-            println!("Cima");
+        0 => {
             direction = "cima"
         },
 
-        1 => { //baixo
-            println!("Baixo");
+        1 => {
             direction = "baixo"
         },
 
-        2 => { //esquerda
-            println!("Esquerda");
+        2 => {
             direction = "esquerda"
         },
 
-        3 => { //direita
-            println!("Direita");
+        3 => {
             direction = "direita"
         },
 
-        _ => { //parado
-            println!("Cima");
-            direction = "cima"
+        _ => {
         },
     }
-    socket.write_message(Message::Text(format!("atualiza;{};{}", id, direction).into())).unwrap();
-    socket.write_message(Message::Text(format!("pinta;{}", id).into())).unwrap();
+    //println!("{}", direction);
+    socket.write_message(Message::Text(format!("atualiza;{};{}", bot_id, direction).into())).unwrap();
+    socket.write_message(Message::Text(format!("pinta;{}", bot_id).into())).unwrap();
 }
 
 fn random_hex() -> String {
