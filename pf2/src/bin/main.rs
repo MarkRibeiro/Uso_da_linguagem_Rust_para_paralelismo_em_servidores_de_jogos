@@ -72,20 +72,23 @@ fn main() {
     let current_state = current_state_clone.clone();
     {
       let sockets = sockets.clone();
+      let socket_clone = sockets.clone();
       let mut sockets = sockets.lock().unwrap();
       sockets.push(websocket.clone());
-    }
 
-    //começa corrotina do contdown
-    if current_state_clone.clone().lock().unwrap().players.len() == 1 {
-      pool.execute(move || {
-        countdown(match_time, sockets.clone());
-      });
+      //começa corrotina do contdown
+      if current_state_clone.clone().lock().unwrap().players.len() == 1 {
+        pool.execute(move || {
+          countdown(match_time, socket_clone.clone());
+        });
+      }
     }
 
     pool.execute(move || {
       handle_connection(websocket, current_state.clone());
     });
+
+
 
   }
 
@@ -283,8 +286,8 @@ fn countdown(match_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStrea
 }
 
 fn send_remaining_time(remaining_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>){
-  for websocket in sockets.lock().unwrap().unwrap() {
-    (websocket).write_message(Message::Text(remaining_time));
+  for websocket in &*sockets.lock().unwrap() {
+    (websocket.lock().unwrap()).write_message(Message::Text(remaining_time.to_string()));
 
   }
 }
