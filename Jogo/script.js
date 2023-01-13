@@ -21,7 +21,7 @@ let id;
 let jogadores;
 let tempoDaPartida = 5;
 
-let intervalId = window.setInterval(atualizaContagem, 1000);
+//let intervalId = window.setInterval(atualizaContagem, 1000);
 
 function tryToConnect(attempt) {
     if (attempt <= 0) {

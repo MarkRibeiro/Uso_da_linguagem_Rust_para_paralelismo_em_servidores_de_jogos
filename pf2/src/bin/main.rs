@@ -4,7 +4,7 @@ use std::io;
 use rand::Rng;
 //use std::net::TcpListener;
 use std::net::TcpStream;
-use std::thread;
+use std::{thread, time};
 use std::time::Duration;
 use std::{net::TcpListener};
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -32,6 +32,7 @@ static width:usize = 20;
 fn main() {
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
   let pool = ThreadPool::new(40);
+  let match_time:u64 = 15;
 
   let mut state = State{ players: vec![], map: vec![] };
   state.map = create_map();
@@ -74,6 +75,14 @@ fn main() {
       let mut sockets = sockets.lock().unwrap();
       sockets.push(websocket.clone());
     }
+
+    //começa corrotina do contdown
+    if current_state_clone.clone().lock().unwrap().players.len() == 1 {
+      pool.execute(move || {
+        countdown(match_time, sockets.clone());
+      });
+    }
+
     pool.execute(move || {
       handle_connection(websocket, current_state.clone());
     });
@@ -164,7 +173,8 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
                           current_state: Arc<Mutex<State>>){ //responde o cliente
   let msg = message.to_string();
   let info:Vec<&str> = msg.split(";").collect();
-  println!("{:?}", info);
+  //print com mensagens recebidas dos clientes
+  //println!("{:?}", info);
 
   let mut websocket = websocket.lock().unwrap();
   let mut state = current_state.lock().unwrap();
@@ -232,7 +242,8 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
 
   let _ = (*websocket).write_message(Message::Text(ret.clone()));
 
-  println!("{:?}", ret);
+  //Print com informaçoes do mapa
+  //println!("{:?}", ret);
 
 }
 
@@ -258,9 +269,22 @@ fn build_response(is_connected: bool, state: &mut MutexGuard<State>) -> String {
   ret = ret + "}";
   ret
 }
-/*
-fn send_remaining_time(){
-  for websocket in sockets {
-    (websocket).write_message(Message::Text(remainingTime));
+
+fn countdown(match_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>) {
+  let two_minutes = time::Duration::from_secs(match_time);
+
+  for remaining_time in (1..match_time).rev() {
+    println!("{} seconds remaining", remaining_time);
+    thread::sleep(time::Duration::from_secs(1));
+    send_remaining_time(remaining_time, sockets.clone())
   }
-}*/
+
+  println!("Time's up!");
+}
+
+fn send_remaining_time(remaining_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>){
+  for websocket in sockets.lock().unwrap().unwrap() {
+    (websocket).write_message(Message::Text(remaining_time));
+
+  }
+}
