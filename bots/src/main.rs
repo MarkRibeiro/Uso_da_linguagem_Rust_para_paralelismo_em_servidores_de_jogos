@@ -18,7 +18,7 @@ fn main() {
     let pool = ThreadPool::new(number_of_bots as usize);
 
     for _ in 0..number_of_bots {
-        let (mut socket, response) = loop {
+        let (mut socket, _) = loop {
             match connect(format!("ws://127.0.0.1:{}", port_number.trim())) {
                 Ok((socket, response)) => {
                     break (socket, response);
