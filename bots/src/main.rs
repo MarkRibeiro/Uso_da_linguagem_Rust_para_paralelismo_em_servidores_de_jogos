@@ -1,3 +1,5 @@
+extern crate rustc_serialize;
+use rustc_serialize::json::Json;
 use std::net::TcpStream;
 use rand::Rng;
 use std::thread;
@@ -34,7 +36,9 @@ fn main() {
             socket.write_message(Message::Text(format!("conecta;{};{};0;0", -1, random_hex()))).unwrap();
             let msg = socket.read_message().unwrap();
             // let info:Vec<&str> = msg.to_string().split(";").collect();
-            let bot_id = msg.to_string().trim().parse::<i32>().unwrap();
+            let json =  Json::from_str(&msg.to_string()).unwrap();
+            let bot_id = json.as_object().unwrap().get("id").unwrap().as_i64().unwrap();
+            //let bot_id = msg.to_string().trim().parse::<i32>().unwrap();
             println!("Bot {} trabalhando", bot_id);
             loop {
                 next_movement(&mut socket, bot_id);
@@ -45,7 +49,7 @@ fn main() {
     thread::sleep(Duration::from_secs(10));
 }
 
-fn next_movement(socket: &mut WebSocket<MaybeTlsStream<TcpStream>>, bot_id: i32) {
+fn next_movement(socket: &mut WebSocket<MaybeTlsStream<TcpStream>>, bot_id: i64) {
     let x = rand::thread_rng().gen_range(0..5);
     let mut direction = "";
     match x {

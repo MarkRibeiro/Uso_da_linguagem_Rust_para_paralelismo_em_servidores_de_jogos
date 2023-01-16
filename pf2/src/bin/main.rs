@@ -29,12 +29,15 @@ struct State {
 }
 static heigth:usize = 10;
 static width:usize = 20;
+
 fn main() {
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
   let pool = ThreadPool::new(40);
   let match_time:u64 = 15;
 
   let mut state = State{ players: vec![], map: vec![] };
+  let mut game_is_over= Arc::new(Mutex::new(false));
+
   state.map = create_map();
   let current_state = Arc::new(Mutex::new(state));
   let current_state_clone = current_state.clone();
@@ -77,9 +80,9 @@ fn main() {
       sockets.push(websocket.clone());
 
       //começa corrotina do contdown
-      if current_state_clone.clone().lock().unwrap().players.len() == 1 {
+      if current_state_clone.clone().lock().unwrap().players.len() == 0 {
         pool.execute(move || {
-          countdown(match_time, socket_clone.clone());
+          countdown(match_time, socket_clone.clone(), current_state);
         });
       }
     }
@@ -192,7 +195,7 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
     };
     state.players.push(jogador);
     println!("numero de jogadores: {:?}", newID);
-    (*websocket).write_message(Message::Text(format!("{}", newID))).unwrap();
+    (*websocket).write_message(Message::Text(format!("{{\"id\":{}}}", newID))).unwrap();
   }
   if info[0]=="atualiza" {
     let id = info[1].parse::<usize>().unwrap();
@@ -273,21 +276,42 @@ fn build_response(is_connected: bool, state: &mut MutexGuard<State>) -> String {
   ret
 }
 
-fn countdown(match_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>) {
-  let two_minutes = time::Duration::from_secs(match_time);
+fn countdown(match_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>, current_state: Arc<Mutex<State>>) {
+  let two_minutes = time::Duration::from_secs(match_time+1);
 
-  for remaining_time in (1..match_time).rev() {
+  for remaining_time in (0..match_time+1).rev() {
     println!("{} seconds remaining", remaining_time);
     thread::sleep(time::Duration::from_secs(1));
     send_remaining_time(remaining_time, sockets.clone())
   }
 
   println!("Time's up!");
+  let winner_id = find_winner(current_state);
+  send_winner(winner_id, sockets.clone())
+  //game_is_over = true;
 }
 
 fn send_remaining_time(remaining_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>){
   for websocket in &*sockets.lock().unwrap() {
-    (websocket.lock().unwrap()).write_message(Message::Text(remaining_time.to_string()));
+    (websocket.lock().unwrap()).write_message(Message::Text(format!("{{\"tr\":\"{}\"}}", remaining_time.to_string())));
+  }
+}
 
+fn find_winner(current_state: Arc<Mutex<State>>) -> usize {
+  let mut score_vencedor = current_state.lock().unwrap().players[0].score;
+  let mut vencedor = current_state.lock().unwrap().players[0].id;
+
+  for player in current_state.lock().unwrap().players {
+    if player.score > score_vencedor {
+      score_vencedor = player.score;
+      vencedor = player.id;
+    }
+  }
+  return vencedor;
+}
+
+fn send_winner(winner_id:usize, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>){
+  for websocket in &*sockets.lock().unwrap() {
+    (websocket.lock().unwrap()).write_message(Message::Text(format!("{{\"vencedor\":\"{}\"}}", winner_id.to_string())));
   }
 }

@@ -16,10 +16,12 @@ let tamJogador = 1;
 let cor = "green";
 let piscar = 0;
 let piscadaTempo = 10;
-let estado;
+let mapa;
 let id;
 let jogadores;
 let tempoDaPartida = 5;
+let tr
+let estado
 
 //let intervalId = window.setInterval(atualizaContagem, 1000);
 
@@ -42,16 +44,32 @@ function tryToConnect(attempt) {
 
     aWebSocket.onmessage = function (event) {
         estado = JSON.parse(event.data);
+
+        if (estado.mapa !== undefined) {
+            mapa = estado.mapa
+        }
+
         if (estado.id !== undefined) {
             id = estado.id
             sessionStorage.setItem("id", estado.id)
         }
-        //let id = sessionStorage.getItem("id")
-        console.log(estado);
-        console.log(id);
-        jogadores = estado.jogadores
 
-        pontuacao.innerHTML = "Pontuação: " + estado.jogadores[id].pontuacao;
+        if (estado.jogadores !== undefined){
+            jogadores = estado.jogadores;
+            pontuacao.innerHTML = "Pontuação: " + estado.jogadores[id].pontuacao;
+        }
+            
+        if (estado.tr !== undefined) {
+            tempoRestante.innerHTML = "Tempo Restante: " + estado.tr
+        }
+        
+        if (estado.tr <= 0) {
+            tempoRestante.innerHTML = "Tempo Restante: " + estado.tr
+        } 
+
+        if (estado.vencedor !== undefined) {
+            alert("Fim do jogo\nO vencedor foi " + estado.vencedor);
+        } 
     };
     aWebSocket.onerror = function (event) {
         console.log(event);
@@ -70,12 +88,10 @@ function tryToConnect(attempt) {
 tryToConnect(100);
 
 function atualizaCanvas() {
-    if (!estado) {
+    if (!mapa) {
         window.requestAnimationFrame(atualizaCanvas);
         return
     }
-
-    let mapa = estado.mapa
 
     contcanvas.fillStyle = "white"
     contcanvas.beginPath();
@@ -162,10 +178,9 @@ function leTeclado(evento) {
 }
 
 function atualizaContagem(){
-    tempoDaPartida--;
-    tempoRestante.innerHTML = "Tempo Restante: " + tempoDaPartida
+    tempoRestante.innerHTML = "Tempo Restante: " + tr
 
-    if (tempoDaPartida <= -1) {
+    if (tr <= -1) {
         alert("Fim do jogo\nO vencedor foi ....");
         clearInterval(intervalId);
         tempoRestante.innerHTML = "Tempo Restante: 0"
