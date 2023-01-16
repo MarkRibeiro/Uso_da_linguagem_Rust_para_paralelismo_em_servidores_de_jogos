@@ -73,6 +73,7 @@ fn main() {
     };
     let websocket =  Arc::new(Mutex::new(websocket));
     let current_state = current_state_clone.clone();
+    let current_state_clone2 = current_state_clone.clone();
     {
       let sockets = sockets.clone();
       let socket_clone = sockets.clone();
@@ -82,7 +83,7 @@ fn main() {
       //começa corrotina do contdown
       if current_state_clone.clone().lock().unwrap().players.len() == 0 {
         pool.execute(move || {
-          countdown(match_time, socket_clone.clone(), current_state);
+          countdown(match_time, socket_clone.clone(), current_state_clone2.clone());
         });
       }
     }
@@ -301,7 +302,7 @@ fn find_winner(current_state: Arc<Mutex<State>>) -> usize {
   let mut score_vencedor = current_state.lock().unwrap().players[0].score;
   let mut vencedor = current_state.lock().unwrap().players[0].id;
 
-  for player in current_state.lock().unwrap().players {
+  for player in &current_state.lock().unwrap().players {
     if player.score > score_vencedor {
       score_vencedor = player.score;
       vencedor = player.id;
