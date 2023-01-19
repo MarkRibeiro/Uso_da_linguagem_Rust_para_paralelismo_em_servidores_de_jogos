@@ -1,6 +1,6 @@
 extern crate tungstenite;
 use pf2::ThreadPool;
-use std::io;
+use std::{env, io};
 use rand::Rng;
 //use std::net::TcpListener;
 use std::net::TcpStream;
@@ -16,7 +16,7 @@ struct Point {
 }
 
 struct Player{
-  //name: String,
+  name: String,
   id : usize,
   color: String,
   posi: Point,
@@ -25,20 +25,33 @@ struct Player{
 
 struct State {
   players: Vec<Player>,
-  map: Vec<Vec<String>>
+  map: Vec<Vec<String>>,
+  canvas_height:usize,
+  canvas_width:usize,
 }
-static heigth:usize = 10;
-static width:usize = 20;
+//static height:usize = 10;
+//static width:usize = 20;
+//let match_time:u64 = 120;
 
 fn main() {
+  /*
+  let args: Vec<String> = env::args().collect();
+
+  let canvas_height = args[1].trim().parse::<usize>().unwrap();
+  let canvas_width = args[2].trim().parse::<usize>().unwrap();
+  let match_time:u64 = args[3].trim().parse::<u64>().unwrap();*/
+
+  let canvas_height = 10;
+  let canvas_width = 20;
+  let match_time:u64 = 120;
+
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
   let pool = ThreadPool::new(40);
-  let match_time:u64 = 15;
 
-  let mut state = State{ players: vec![], map: vec![] };
+  let mut state = State{ players: vec![], map: vec![],canvas_height: canvas_height,  canvas_width: canvas_width};
   let mut game_is_over= Arc::new(Mutex::new(false));
 
-  state.map = create_map();
+  state.map = create_map(state.canvas_height, state.canvas_width);
   let current_state = Arc::new(Mutex::new(state));
   let current_state_clone = current_state.clone();
   let sockets:Vec<Arc<Mutex<WebSocket<TcpStream>>>> = Vec::new();
@@ -99,11 +112,11 @@ fn main() {
   println!("Shutting down.");
 }
 
-fn create_map() -> Vec<Vec<String>> {
+fn create_map(height:usize, width:usize) -> Vec<Vec<String>> {
 
   let mut matrix = vec![];
   let mut vector = vec![];
-  for _ in 0..heigth {
+  for _ in 0..height {
     vector.push("white".to_string());
   }
   for _ in 0..width {
@@ -189,9 +202,10 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
     println!("Novo Jogador");
     let newID = state.players.len();
     let jogador = Player{
+      name: info[1].to_string(),
       id: newID,
       color: info[2].to_string(),
-      posi: Point { x: rand::thread_rng().gen_range(0..width), y: rand::thread_rng().gen_range(0..heigth) },
+      posi: Point { x: rand::thread_rng().gen_range(0..state.canvas_width), y: rand::thread_rng().gen_range(0..state.canvas_height) },
       score: 0
     };
     state.players.push(jogador);
@@ -203,34 +217,22 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
     if info[2] == "cima" && state.players[id].posi.y >= 1 {
       state.players[id].posi.y -= 1;
     }
-    if info[2] == "baixo" && state.players[id].posi.y + 1 < heigth {
+    if info[2] == "baixo" && state.players[id].posi.y + 1 < state.canvas_height {
       state.players[id].posi.y += 1;
     }
     if info[2] == "esquerda" && state.players[id].posi.x >= 1 {
       state.players[id].posi.x -= 1;
     }
-    if info[2] == "direita" && state.players[id].posi.x + 1 < width {
+    if info[2] == "direita" && state.players[id].posi.x + 1 < state.canvas_width {
       state.players[id].posi.x += 1;
     }
-  }
-  else if info[0]=="pinta" {
-    let id = info[1].parse::<usize>().unwrap();
-    if info.len() > 2 {
-      let novo_x = info[2].parse::<usize>();
-      let novo_y = info[3].parse::<usize>();
-      if let Ok(x) = novo_x {
-        if let Ok(y) = novo_y {
-          state.map[x][y] = state.players[id].color.to_string();
-        }
-      }
-    } else {
-      let x = state.players[id].posi.x;
-      let y = state.players[id].posi.y;
+    let x = state.players[id].posi.x;
+    let y = state.players[id].posi.y;
 
-      state.map[x][y] = state.players[id].color.to_string();
-    }
+    state.map[x][y] = state.players[id].color.to_string();
 
   }
+
   for mut jogador in &mut state.players{
     jogador.score = 0;
   }
@@ -287,8 +289,8 @@ fn countdown(match_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStrea
   }
 
   println!("Time's up!");
-  let winner_id = find_winner(current_state);
-  send_winner(winner_id, sockets.clone())
+  let winner = find_winner(current_state);
+  send_winner(winner, sockets.clone())
   //game_is_over = true;
 }
 
@@ -298,20 +300,20 @@ fn send_remaining_time(remaining_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebS
   }
 }
 
-fn find_winner(current_state: Arc<Mutex<State>>) -> usize {
+fn find_winner(current_state: Arc<Mutex<State>>) -> String {
   let mut score_vencedor = current_state.lock().unwrap().players[0].score;
-  let mut vencedor = current_state.lock().unwrap().players[0].id;
+  let mut vencedor = current_state.lock().unwrap().players[0].name.clone();
 
   for player in &current_state.lock().unwrap().players {
     if player.score > score_vencedor {
       score_vencedor = player.score;
-      vencedor = player.id;
+      vencedor = player.name.clone();
     }
   }
   return vencedor;
 }
 
-fn send_winner(winner_id:usize, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>){
+fn send_winner(winner_id: String, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>){
   for websocket in &*sockets.lock().unwrap() {
     (websocket.lock().unwrap()).write_message(Message::Text(format!("{{\"vencedor\":\"{}\"}}", winner_id.to_string())));
   }

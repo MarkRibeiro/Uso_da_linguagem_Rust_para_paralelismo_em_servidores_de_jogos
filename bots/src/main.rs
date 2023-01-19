@@ -19,7 +19,7 @@ fn main() {
 
     let pool = ThreadPool::new(number_of_bots as usize);
 
-    for _ in 0..number_of_bots {
+    for bot_number in 0..number_of_bots {
         let (mut socket, _) = loop {
             match connect(format!("ws://127.0.0.1:{}", port_number.trim())) {
                 Ok((socket, response)) => {
@@ -33,7 +33,7 @@ fn main() {
 
         pool.execute(move || {
             //random hexadecimal
-            socket.write_message(Message::Text(format!("conecta;{};{};0;0", -1, random_hex()))).unwrap();
+            socket.write_message(Message::Text(format!("conecta;Bot{};{};0;0", bot_number, random_hex()))).unwrap();
             let msg = socket.read_message().unwrap();
             // let info:Vec<&str> = msg.to_string().split(";").collect();
             let json =  Json::from_str(&msg.to_string()).unwrap();
@@ -74,7 +74,6 @@ fn next_movement(socket: &mut WebSocket<MaybeTlsStream<TcpStream>>, bot_id: i64)
     }
     //println!("{}", direction);
     socket.write_message(Message::Text(format!("atualiza;{};{}", bot_id, direction).into())).unwrap();
-    socket.write_message(Message::Text(format!("pinta;{}", bot_id).into())).unwrap();
 }
 
 fn random_hex() -> String {

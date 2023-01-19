@@ -3,26 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <script>
-        function startGame() {
-            let loginDiv = document.getElementById("login");
-            let gameDiv = document.getElementById("game");
-            
-            loginDiv.style.display = "none"
-            gameDiv.style.display = "block"
-        }
+    <script src = "script.js" defer>
     </script>
 </head>
 <body>
     <div id="login">
-        <h1>Escolha um nome e uma cor</h1>
-        <label for="fname">Nome:</label>
-        <input type="text" id="nome" name="nome"><br><br>
-
-        <label for="cor">Cor:</label>
-        <input type="color" id="cor" name="cor" value="#e66465"><br><br>
-
-        <input type="button" value="Jogar" onclick="return startGame();">
+        <form id="playerInfo">
+            <h1>Escolha um nome e uma cor</h1>
+                  
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome"><br><br>
+          
+            <label for="cor">Cor:</label>
+            <input type="color" id="cor" name="cor" value="#e66465"><br><br>
+          
+            <input type="button" value="Jogar" onclick="return startGame();">
+        </form>
     </div>
 
     <div id="game">
@@ -30,8 +26,6 @@
         <br>
         <h1 id="Pontuacao">Pontuação: 0</h1>
         <h1 id="TempoRestante">Tempo Restante: 0</h1>
-        <script type="module" src = "script.js">
-        </script>
     </div>
 </body>
 </html>

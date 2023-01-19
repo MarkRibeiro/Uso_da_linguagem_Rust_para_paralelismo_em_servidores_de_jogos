@@ -18,6 +18,7 @@ let piscar = 0;
 let piscadaTempo = 10;
 let mapa;
 let id;
+let nome;
 let jogadores;
 let tempoDaPartida = 5;
 let tr
@@ -26,6 +27,8 @@ let estado
 //let intervalId = window.setInterval(atualizaContagem, 1000);
 
 function tryToConnect(attempt) {
+    cor = document.forms.playerInfo.cor.value
+    nome = document.forms.playerInfo.nome.value
     if (attempt <= 0) {
         console.log("Desisti de conectar");
         return;
@@ -33,7 +36,7 @@ function tryToConnect(attempt) {
     aWebSocket = new WebSocket("ws://127.0.0.1:3012");
     aWebSocket.onopen = function (event) {
         console.log("WebSocket is open now.");
-        aWebSocket.send("conecta;" + id + ";" + cor + ";" + posi.x + ";" + posi.y);
+        aWebSocket.send("conecta;" + nome + ";" + cor + ";" + posi.x + ";" + posi.y);
         contcanvas.beginPath();
         contcanvas.fillStyle = cor;
         contcanvas.rect(posi.x * tamCelula, posi.y * tamCelula, tamCelula, tamCelula);
@@ -56,7 +59,7 @@ function tryToConnect(attempt) {
 
         if (estado.jogadores !== undefined){
             jogadores = estado.jogadores;
-            pontuacao.innerHTML = "Pontuação: " + estado.jogadores[id].pontuacao;
+            pontuacao.innerHTML = "Pontuação de " + nome + ": "+ estado.jogadores[id].pontuacao;
         }
             
         if (estado.tr !== undefined) {
@@ -84,8 +87,6 @@ function tryToConnect(attempt) {
         }
     }
 }
-
-tryToConnect(100);
 
 function atualizaCanvas() {
     if (!mapa) {
@@ -168,10 +169,6 @@ function leTeclado(evento) {
             if(event.key == "ArrowRight" && jogador.x+1+tamJogador <= largura/tamCelula){
                 aWebSocket.send("atualiza;" + id +";direita");
             }
-            if(event.key == " " ){
-                aWebSocket.send("pinta;" + id +";" + jogador.x + ";" + jogador.y);
-                piscar = piscadaTempo;
-            }
             aWebSocket.send("atualiza;" + id + ";" + jogador.color + ";" + jogador.x + ";" + jogador.y);
         }
     }
@@ -185,6 +182,15 @@ function atualizaContagem(){
         clearInterval(intervalId);
         tempoRestante.innerHTML = "Tempo Restante: 0"
     }
+}
+
+function startGame() {
+    let loginDiv = document.getElementById("login");
+    let gameDiv = document.getElementById("game");
+    
+    loginDiv.style.display = "none"
+    gameDiv.style.display = "block"
+    tryToConnect(100);
 }
 
 document.addEventListener("keydown", leTeclado);
