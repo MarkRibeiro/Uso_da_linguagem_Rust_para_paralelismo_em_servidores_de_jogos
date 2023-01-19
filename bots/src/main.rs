@@ -8,9 +8,16 @@ use tungstenite::{connect, Message, WebSocket};
 use tungstenite::stream::MaybeTlsStream;
 use bots::ThreadPool;
 use std::env;
+use std::process;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+
+    if args.len()!=3 {
+        println!("\nNumero incorreto de argumentos\nDeveria receber 2 e recebeu {}\ncargo run [numero_de_bots_desejados] [porta_desejada]\n", args.len()-1);
+        process::exit(0x0100);
+    }
+
     let arg_1 = &args[1];
     let arg_2 = &args[2];
 

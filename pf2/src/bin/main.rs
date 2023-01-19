@@ -4,6 +4,7 @@ use std::{env, io};
 use rand::Rng;
 //use std::net::TcpListener;
 use std::net::TcpStream;
+use std::process;
 use std::{thread, time};
 use std::time::Duration;
 use std::{net::TcpListener};
@@ -34,16 +35,20 @@ struct State {
 //let match_time:u64 = 120;
 
 fn main() {
-  /*
   let args: Vec<String> = env::args().collect();
+
+  if args.len()!=4 {
+    println!("\nNumero incorreto de argumentos\nDeveria receber 3 e recebeu {}\ncargo run [tamanho_do_canvas] [altura_do_canvas] [tempo_da_partida]\n", args.len()-1);
+    process::exit(0x0100);
+  }
 
   let canvas_height = args[1].trim().parse::<usize>().unwrap();
   let canvas_width = args[2].trim().parse::<usize>().unwrap();
-  let match_time:u64 = args[3].trim().parse::<u64>().unwrap();*/
-
+  let match_time:u64 = args[3].trim().parse::<u64>().unwrap();
+/*
   let canvas_height = 10;
   let canvas_width = 20;
-  let match_time:u64 = 120;
+  let match_time:u64 = 120;*/
 
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
   let pool = ThreadPool::new(40);
