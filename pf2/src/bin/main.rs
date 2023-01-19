@@ -29,12 +29,11 @@ struct State {
   map: Vec<Vec<String>>,
   canvas_height:usize,
   canvas_width:usize,
+  match_time:u64
 }
-//static height:usize = 10;
-//static width:usize = 20;
-//let match_time:u64 = 120;
 
 fn main() {
+  /*
   let args: Vec<String> = env::args().collect();
 
   if args.len()!=4 {
@@ -44,16 +43,16 @@ fn main() {
 
   let canvas_height = args[1].trim().parse::<usize>().unwrap();
   let canvas_width = args[2].trim().parse::<usize>().unwrap();
-  let match_time:u64 = args[3].trim().parse::<u64>().unwrap();
-/*
+  let match_time = args[3].trim().parse::<u64>().unwrap();*/
+
   let canvas_height = 10;
   let canvas_width = 20;
-  let match_time:u64 = 120;*/
+  let match_time = 60;
 
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
   let pool = ThreadPool::new(40);
 
-  let mut state = State{ players: vec![], map: vec![],canvas_height: canvas_height,  canvas_width: canvas_width};
+  let mut state = State{ players: vec![], map: vec![], canvas_height: canvas_height, canvas_width: canvas_width, match_time:match_time};
   let mut game_is_over= Arc::new(Mutex::new(false));
 
   state.map = create_map(state.canvas_height, state.canvas_width);
@@ -66,6 +65,7 @@ fn main() {
     loop {
       //println!("oi");
       let response;
+      //tempo de atualização do jogo
       thread::sleep(Duration::from_millis(100));
       {
         let state = current_state.clone();
@@ -213,9 +213,10 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
       posi: Point { x: rand::thread_rng().gen_range(0..state.canvas_width), y: rand::thread_rng().gen_range(0..state.canvas_height) },
       score: 0
     };
+    state.map[jogador.posi.x][jogador.posi.y] = info[2].to_string();
     state.players.push(jogador);
     println!("numero de jogadores: {:?}", newID);
-    (*websocket).write_message(Message::Text(format!("{{\"id\":{}}}", newID))).unwrap();
+    (*websocket).write_message(Message::Text(format!("{{\"id\":{},\"canvas_height\":{},\"canvas_width\":{},\"match_time\":{}}}", newID, state.canvas_height, state.canvas_width, state.match_time))).unwrap();
   }
   if info[0]=="atualiza" {
     let id = info[1].parse::<usize>().unwrap();
@@ -235,7 +236,6 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
     let y = state.players[id].posi.y;
 
     state.map[x][y] = state.players[id].color.to_string();
-
   }
 
   for mut jogador in &mut state.players{

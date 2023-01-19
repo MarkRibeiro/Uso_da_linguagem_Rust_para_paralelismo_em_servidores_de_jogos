@@ -9,8 +9,8 @@ let gameDiv = document.getElementById("game");
 gameDiv.style.display = "none"
 
 let posi = {x:0, y:0};
-let largura = 1000;
-let altura = 500;
+let largura;
+let altura;
 let tamCelula = 50;
 let tamJogador = 1;
 let cor = "green";
@@ -20,11 +20,9 @@ let mapa;
 let id;
 let nome;
 let jogadores;
-let tempoDaPartida = 5;
 let tr
 let estado
 
-//let intervalId = window.setInterval(atualizaContagem, 1000);
 
 function tryToConnect(attempt) {
     cor = document.forms.playerInfo.cor.value
@@ -73,6 +71,12 @@ function tryToConnect(attempt) {
         if (estado.vencedor !== undefined) {
             alert("Fim do jogo\nO vencedor foi " + estado.vencedor);
         } 
+
+        if (estado.canvas_height !== undefined && estado.canvas_width !== undefined && estado.match_time !== undefined) {
+            canvas.height = estado.canvas_height*50
+            canvas.width = estado.canvas_width*50
+            tempoRestante.innerHTML = "Tempo Restante: " + estado.match_time
+        }
     };
     aWebSocket.onerror = function (event) {
         console.log(event);
@@ -154,34 +158,25 @@ function leTeclado(evento) {
     for(let jogador of jogadores){
         console.log(jogador.id, id);
         if(jogador.id == id){
-            if(event.key == "ArrowUp" && jogador.y-1>= 0){
+            if(event.key == "ArrowUp"){
                 aWebSocket.send("atualiza;" + id +";cima");
             }
 
-            if(event.key == "ArrowDown" && jogador.y+1+tamJogador <= altura/tamCelula){
+            if(event.key == "ArrowDown"){
                 aWebSocket.send("atualiza;" + id +";baixo");
             }
 
-            if(event.key == "ArrowLeft" && jogador.x-1 >= 0){
+            if(event.key == "ArrowLeft"){
                 aWebSocket.send("atualiza;" + id +";esquerda");
             }
 
-            if(event.key == "ArrowRight" && jogador.x+1+tamJogador <= largura/tamCelula){
+            if(event.key == "ArrowRight"){
                 aWebSocket.send("atualiza;" + id +";direita");
             }
             aWebSocket.send("atualiza;" + id + ";" + jogador.color + ";" + jogador.x + ";" + jogador.y);
         }
     }
-}
 
-function atualizaContagem(){
-    tempoRestante.innerHTML = "Tempo Restante: " + tr
-
-    if (tr <= -1) {
-        alert("Fim do jogo\nO vencedor foi ....");
-        clearInterval(intervalId);
-        tempoRestante.innerHTML = "Tempo Restante: 0"
-    }
 }
 
 function startGame() {
