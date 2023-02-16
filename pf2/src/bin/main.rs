@@ -47,7 +47,7 @@ fn main() {
 
   let canvas_height = 10;
   let canvas_width = 20;
-  let match_time = 60;
+  let match_time = 10;
 
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
   let pool = ThreadPool::new(40);
@@ -295,7 +295,8 @@ fn countdown(match_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStrea
 
   println!("Time's up!");
   let winner = find_winner(current_state);
-  send_winner(winner, sockets.clone())
+  println!("Winner: {}", winner);
+  send_winner(winner, sockets.clone());
   //game_is_over = true;
 }
 
