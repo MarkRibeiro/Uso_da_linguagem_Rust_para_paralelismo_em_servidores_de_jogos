@@ -29,7 +29,8 @@ struct State {
   map: Vec<Vec<String>>,
   canvas_height:usize,
   canvas_width:usize,
-  match_time:u64
+  match_time:u64,
+  game_is_over:bool
 }
 
 fn main() {
@@ -47,13 +48,13 @@ fn main() {
 
   let canvas_height = 10;
   let canvas_width = 20;
-  let match_time = 10;
+  let match_time = 45;
 
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
   let pool = ThreadPool::new(40);
 
-  let mut state = State{ players: vec![], map: vec![], canvas_height: canvas_height, canvas_width: canvas_width, match_time:match_time};
-  let mut game_is_over= Arc::new(Mutex::new(false));
+  let mut state = State{ players: vec![], map: vec![], canvas_height: canvas_height, canvas_width: canvas_width, match_time:match_time, game_is_over:false
+  };
 
   state.map = create_map(state.canvas_height, state.canvas_width);
   let current_state = Arc::new(Mutex::new(state));
@@ -63,7 +64,6 @@ fn main() {
   let sockets_clone = sockets.clone();
   pool.execute(move || {
     loop {
-      //println!("oi");
       let response;
       //tempo de atualização do jogo
       thread::sleep(Duration::from_millis(100));
@@ -79,6 +79,7 @@ fn main() {
       }
     }
   });
+
   for stream in listener.incoming() {
     let stream = stream.unwrap();
     stream.set_nonblocking(true).unwrap();
@@ -89,6 +90,7 @@ fn main() {
         continue
       }
     };
+
     let websocket =  Arc::new(Mutex::new(websocket));
     let current_state = current_state_clone.clone();
     let current_state_clone2 = current_state_clone.clone();
@@ -110,15 +112,11 @@ fn main() {
       handle_connection(websocket, current_state.clone());
     });
 
-
-
   }
-
   println!("Shutting down.");
 }
 
 fn create_map(height:usize, width:usize) -> Vec<Vec<String>> {
-
   let mut matrix = vec![];
   let mut vector = vec![];
   for _ in 0..height {
@@ -130,52 +128,19 @@ fn create_map(height:usize, width:usize) -> Vec<Vec<String>> {
   return matrix;
 }
 
-/*
-fn handle_connection(mut stream: TcpStream) {
-  let mut buffer = [0; 1024];
-  stream.read(&mut buffer).unwrap();
-
-  let get = b"GET / HTTP/1.1\r\n";
-  let sleep = b"GET /sleep HTTP/1.1\r\n";
-
-  let (status_line, filename) = if buffer.starts_with(get) {
-    ("HTTP/1.1 200 OK", "hello.html")
-  } else if buffer.starts_with(sleep) {
-    thread::sleep(Duration::from_secs(5));
-    ("HTTP/1.1 200 OK", "hello.html")
-  } else {
-    ("HTTP/1.1 404 NOT FOUND", "404.html")
-  };
-
-  let contents = fs::read_to_string(filename).unwrap();
-
-  let response = format!(
-    "{}\r\nContent-Length: {}\r\n\r\n{}",
-    status_line,
-    contents.len(),
-    contents
-  );
-
-  stream.write(response.as_bytes()).unwrap();
-  stream.flush().unwrap();
-}
-*/
-
 fn handle_connection(websocket: Arc<Mutex<WebSocket<TcpStream>>>, current_state: Arc<Mutex<State>>){
   println!("Conectei");
-  loop {
+  loop  {
+    if current_state.lock().unwrap().game_is_over == true{
+      break
+    }
     let msg = websocket.lock().unwrap().read_message();
     match msg{
       Ok(conteudo) => {
         let copy_current_state = current_state.clone();
-        /*{
-            let mut state = current_state.lock().unwrap();
-            *state = msg.clone();
-        }*/
         _process_message(websocket.clone(), conteudo, copy_current_state);
       }
       Err(Error::Io(ref e)) if e.kind() == io::ErrorKind::WouldBlock => {
-        //println!("WouldBlock");
         continue;
       },
       Err(Error::Io(ref e)) if e.kind() == io::ErrorKind::ConnectionReset => {
@@ -198,8 +163,6 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
                           current_state: Arc<Mutex<State>>){ //responde o cliente
   let msg = message.to_string();
   let info:Vec<&str> = msg.split(";").collect();
-  //print com mensagens recebidas dos clientes
-  //println!("{:?}", info);
 
   let mut websocket = websocket.lock().unwrap();
   let mut state = current_state.lock().unwrap();
@@ -255,10 +218,6 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
   let ret = build_response(info[0] == "conecta", &mut state);
 
   let _ = (*websocket).write_message(Message::Text(ret.clone()));
-
-  //Print com informaçoes do mapa
-  //println!("{:?}", ret);
-
 }
 
 fn build_response(is_connected: bool, state: &mut MutexGuard<State>) -> String {
@@ -294,10 +253,10 @@ fn countdown(match_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStrea
   }
 
   println!("Time's up!");
+  current_state.lock().unwrap().game_is_over = true;
   let winner = find_winner(current_state);
   println!("Winner: {}", winner);
   send_winner(winner, sockets.clone());
-  //game_is_over = true;
 }
 
 fn send_remaining_time(remaining_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>>){
