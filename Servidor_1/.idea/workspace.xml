@@ -8,23 +8,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4c973eb7-b087-49d6-8e5d-e18c7510f0b5" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../Servidor_2/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Servidor_2/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Servidor_2/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../Servidor_2/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/.idea/pf2.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/.idea/runConfigurations/Run.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/404.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/Cargo.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/Cargo.toml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/hello.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/pf2.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/src/bin/main.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../pf2/src/lib.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bin/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/bin/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Servidor_2/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../Servidor_2/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Servidor_2/src/bin/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/../Servidor_2/src/bin/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Servidor_2/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/../Servidor_2/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bots/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../bots/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bots/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/../bots/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../bots/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/../bots/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

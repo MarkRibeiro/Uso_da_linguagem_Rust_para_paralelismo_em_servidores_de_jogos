@@ -2,9 +2,9 @@ extern crate rustc_serialize;
 use rustc_serialize::json::Json;
 use std::net::TcpStream;
 use rand::Rng;
-use std::thread;
+use std::{io, thread};
 use std::time::Duration;
-use tungstenite::{connect, Message, WebSocket};
+use tungstenite::{connect, Error, Message, WebSocket};
 use tungstenite::stream::MaybeTlsStream;
 use bots::ThreadPool;
 use std::env;
@@ -26,6 +26,8 @@ fn main() {
 
     let pool = ThreadPool::new(number_of_bots as usize);
 
+    let mut count = 0;
+
     for bot_number in 0..number_of_bots {
         let (mut socket, _) = loop {
             match connect(format!("ws://127.0.0.1:{}", port_number.trim())) {
@@ -46,10 +48,39 @@ fn main() {
             let json =  Json::from_str(&msg.to_string()).unwrap();
             let bot_id = json.as_object().unwrap().get("id").unwrap().as_i64().unwrap();
             //let bot_id = msg.to_string().trim().parse::<i32>().unwrap();
-            println!("Bot {} trabalhando", bot_id);
             loop {
                 next_movement(&mut socket, bot_id);
                 thread::sleep(Duration::from_millis(100));
+                count = count+1;
+                //println!("Requisicoes realizadas pelo bot{}: {}", bot_id, count);
+                let message = socket.read_message();
+
+                match message{
+                    Ok(conteudo) => {
+                        let msg = conteudo.to_string();
+                        let info:Vec<&str> = msg.split(":").collect();
+                        //let info2:Vec<&str> = info.split(";").collect();
+                        if info[0] == "{\"vencedor\"" {
+                            println!("Requisicoes realizadas pelo bot{}: {}", bot_id, count);
+                            break
+                        }
+                    }
+                    Err(Error::Io(ref e)) if e.kind() == io::ErrorKind::WouldBlock => {
+                      continue;
+                    },
+                    Err(Error::Io(ref e)) if e.kind() == io::ErrorKind::ConnectionReset => {
+                      println!("Connection reset");
+                    },
+                    Err(Error::AlreadyClosed) => {
+                      println!("Conexão encerrada");
+                      break;
+                    },
+                    Err(Error::ConnectionClosed) => {
+                      println!("Conexão encerrada");
+                      break;
+                    },
+                    Err(e) => panic!("encountered IO error: {e}")
+                  }
             }
         });
     }

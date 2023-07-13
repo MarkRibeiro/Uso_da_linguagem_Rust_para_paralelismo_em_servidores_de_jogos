@@ -16,13 +16,6 @@ enum Message {
 }
 
 impl ThreadPool {
-  /// Create a new ThreadPool.
-  ///
-  /// The size is the number of threads in the pool.
-  ///
-  /// # Panics
-  ///
-  /// The `new` function will panic if the size is zero.
   pub fn new(size: usize) -> ThreadPool {
     assert!(size > 0);
 
@@ -51,16 +44,16 @@ impl ThreadPool {
 
 impl Drop for ThreadPool {
   fn drop(&mut self) {
-    println!("Sending terminate message to all workers.");
+    println!("Enviando mensagem de Encerramento para todas as threads");
 
     for _ in &self.workers {
       self.sender.send(Message::Terminate).unwrap();
     }
 
-    println!("Shutting down all workers.");
+    println!("Encerrando todas as threads");
 
     for worker in &mut self.workers {
-      println!("Shutting down worker {}", worker.id);
+      println!("Encerrando thread {}", worker.id);
 
       if let Some(thread) = worker.thread.take() {
         thread.join().unwrap();
@@ -81,12 +74,10 @@ impl Worker {
 
       match message {
         Message::NewJob(job) => {
-          //println!("Worker {} got a job; executing.", id);
 
           job();
         }
         Message::Terminate => {
-          println!("Worker {} was told to terminate.", id);
 
           break;
         }

@@ -9,6 +9,8 @@ use std::time::Duration;
 use std::{net::TcpListener};
 use std::sync::{Arc, Mutex, MutexGuard};
 use tungstenite::{accept, Error, Message, WebSocket};
+use std::env;
+use std::process;
 
 struct Point {
   x:usize,
@@ -33,24 +35,24 @@ struct State {
 }
 
 fn main() {
-  /*
   let args: Vec<String> = env::args().collect();
 
   if args.len()!=4 {
-    println!("\nNumero incorreto de argumentos\nDeveria receber 3 e recebeu {}\ncargo run [tamanho_do_canvas] [altura_do_canvas] [tempo_da_partida]\n", args.len()-1);
+    println!("\nNumero incorreto de argumentos\nDeveria receber 3 e recebeu {}\ncargo run [largura_do_canvas] [altura_do_canvas] [tempo_da_partida]\n", args.len()-1);
     process::exit(0x0100);
   }
 
   let canvas_height = args[1].trim().parse::<usize>().unwrap();
   let canvas_width = args[2].trim().parse::<usize>().unwrap();
-  let match_time = args[3].trim().parse::<u64>().unwrap();*/
+  let match_time = args[3].trim().parse::<u64>().unwrap();
 
-  let canvas_height = 10;
-  let canvas_width = 20;
-  let match_time = 45;
+  //let canvas_height = 10;
+  //let canvas_width = 20;
+  //let match_time = 45;
 
   let listener = TcpListener::bind("127.0.0.1:3012").unwrap();
-  let pool = ThreadPool::new(40);
+  listener.set_nonblocking(true).expect("Can not set non-blocking");
+  let pool = ThreadPool::new(100);
 
   let mut state = State{ players: vec![], map: vec![], canvas_height: canvas_height, canvas_width: canvas_width, match_time:match_time, game_is_over:false
   };
@@ -61,26 +63,41 @@ fn main() {
   let sockets:Vec<Arc<Mutex<WebSocket<TcpStream>>>> = Vec::new();
   let sockets:Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStream>>>>>> = Arc::new(Mutex::new(sockets));
   let sockets_clone = sockets.clone();
-  pool.execute(move || {
-    loop {
-      let response;
-      //tempo de atualização do jogo
-      thread::sleep(Duration::from_millis(100));
-      {
-        let state = current_state.clone();
-        response = build_response(false, &mut state.lock().unwrap());
+  {
+    let current_state = current_state.clone();
+    pool.execute(move || { //Thread do estado
+      loop {
+        let response;
+        //tempo de atualização do jogo
+        thread::sleep(Duration::from_millis(100));
+        {
+          let state = current_state.clone();
+          response = build_response(false, &mut state.lock().unwrap());
+        }
+        let sockets = sockets_clone.clone();
+        let sockets = &*sockets.lock().unwrap();
+        for socket in sockets {
+          let mut socket = socket.lock().unwrap();
+          let _ = (*socket).write_message(Message::Text(response.clone()));
+        }
       }
-      let sockets = sockets_clone.clone();
-      let sockets = &*sockets.lock().unwrap();
-      for socket in sockets {
-        let mut socket = socket.lock().unwrap();
-        let _ = (*socket).write_message(Message::Text(response.clone()));
-      }
-    }
-  });
+    });
+  }
+  //for stream in listener.incoming()
 
-  for stream in listener.incoming() {
-    let stream = stream.unwrap();
+  loop {
+    if current_state.lock().unwrap().game_is_over == true{
+      break
+    }
+    let stream =
+    match listener.accept(){
+      Ok((stream, _)) => stream,
+      Err(_) => {
+
+        continue
+      }
+    };
+    //let stream = stream.unwrap();
     stream.set_nonblocking(true).unwrap();
     let websocket = match accept(stream) {
       Ok(x) => x,
@@ -107,12 +124,11 @@ fn main() {
       }
     }
 
-    pool.execute(move || {
+    pool.execute(move || { //Thread dos jogadores
       handle_connection(websocket, current_state.clone());
     });
-
   }
-  println!("Shutting down.");
+  println!("Encerrando servidor");
 }
 
 fn create_map(height:usize, width:usize) -> Vec<Vec<String>> {
@@ -165,7 +181,6 @@ fn _process_message(websocket: Arc<Mutex<WebSocket<TcpStream>>>, message:Message
   let mut websocket = websocket.lock().unwrap();
   let mut state = current_state.lock().unwrap();
   if info[0]=="conecta" {
-    println!("Novo Jogador");
     let new_id = state.players.len();
     let jogador = Player{
       name: info[1].to_string(),
@@ -247,10 +262,10 @@ fn countdown(match_time:u64, sockets: Arc<Mutex<Vec<Arc<Mutex<WebSocket<TcpStrea
     send_remaining_time(remaining_time, sockets.clone())
   }
 
-  println!("Time's up!");
+  println!("Tempo acabou!");
   current_state.lock().unwrap().game_is_over = true;
   let winner = find_winner(current_state);
-  println!("Winner: {}", winner);
+  println!("Vencedor: {}", winner);
   send_winner(winner, sockets.clone());
 }
 
